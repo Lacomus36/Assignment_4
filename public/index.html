@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title> Dog Breed Viewer</title>
+
+<style>
+ body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        input {
+            padding: 8px;
+            font-size: 16px;
+        }
+
+        button {
+            padding: 8px 12px;
+            font-size: 16px;
+            margin-left: 10px;
+        }
+
+        img {
+            margin-top: 20px;
+            max-width: 500px;
+            height: auto;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        #message {
+            margin-top: 20px;
+            font-size: 18px;
+            color: red;
+        }
+
+</style>
+</head>
+
+<body>
+<h1>Dog breed Picture Viewer </h1>
+
+<input type="text" id ="breedInput" list="breedList" placeholder="Enter Dog Breed">
+<datalist id="breedList"></datalist>
+<button onclick="startImages()">Show Images</button>
+
+<div id="message"></div>
+<img id="dogImage" />
+
+<script>
+
+const breedInput = document.getElementById("breedInput");
+const breedList = document.getElementById("breedList");
+const message = document.getElementById("message");
+const dogImage = document.getElementById("dogImage");
+
+let intervalId = null;
+let breeds = [];
+
+// ✅ Fetch breeds from your Express server
+fetch("/breeds")
+    .then(response => response.json())
+    .then(data => {
+        breeds = data;
+
+        breeds.forEach(breed => {
+            const option = document.createElement("option");
+            option.value = breed;
+            breedList.appendChild(option); // ✅ this matches your HTML
+        });
+    })
+    .catch(err => {
+        console.error(err);
+        message.textContent = "Error loading breeds";
+    });
+
+function startImages() {
+    const breed = breedInput.value.toLowerCase().trim();
+
+    message.textContent = "";
+    dogImage.src = "";
+
+    if (intervalId) {
+        clearInterval(intervalId);
+    }
+
+    if (!breeds.includes(breed)) {
+        message.textContent = "No such breed exists";
+        return;
+    }
+
+    fetchImage(breed);
+
+    intervalId = setInterval(() => {
+        fetchImage(breed);
+    }, 3000);
+}
+
+function fetchImage(breed) {
+    fetch(`/image/${breed}`)
+        .then(response => response.json())
+        .then(data => {
+            dogImage.src = data.image; // ✅ correct property
+        })
+        .catch(err => {
+            console.error(err);
+            message.textContent = "Error fetching image";
+        });
+}
+
+</script>
+
+</body>
+</html>
